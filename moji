@@ -1,0 +1,62 @@
+set -e
+mkdir -p app/src/main/java/com/example/virtualgold app/src/main/res/values
+cat > settings.gradle <<'EOF'
+pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+rootProject.name = 'VirtualGold'
+include ':app'
+EOF
+cat > build.gradle <<'EOF'
+plugins {
+    id 'com.android.application' version '8.5.2' apply false
+}
+EOF
+cat > app/build.gradle <<'EOF'
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.example.virtualgold'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.example.virtualgold'
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+}
+EOF
+cat > app/src/main/AndroidManifest.xml <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ <application android:theme="@android:style/Theme.Material.Light.NoActionBar" android:label="طلای مجازی">
+  <activity android:name=".MainActivity" android:exported="true">
+   <intent-filter>
+    <action android:name="android.intent.action.MAIN"/>
+    <category android:name="android.intent.category.LAUNCHER"/>
+   </intent-filter>
+  </activity>
+ </application>
+</manifest>
+EOF
+cat > app/src/main/java/com/example/virtualgold/MainActivity.java <<'EOF'
+package com.example.virtualgold;
+import android.app.*;
+import android.os.Bundle;
+import android.graphics.Typeface;
+import android.view.Gravity;
+import android.widget.*;
+import java.util.Locale;
+public class MainActivity extends Activity {
+ double grams=0; final double samplePrice=10000000; TextView balance,status; EditText amount;
+ public void onCreate(Bundle b) {
+  super.onCreate(b); LinearLayout root=new LinearLayout(this); root.setOrientation(1); root.setPadding(32,40,32,24); root.setLayoutDirection(1); root.setBackgroundColor(0xFFFFFBF0); ScrollView scroll=new ScrollView(this);
+  TextView title=new TextView(this); title.setText("طلای مجازی"); title.setTextSize(30); title.setTypeface(null,Typeface.BOLD); title.setGravity(Gravity.CENTER); root.addView(title);
+  TextView price=new TextView(this); price.setText("قیمت نمونه هر گرم: ۱۰,۰۰۰,۰۰۰ تومان"); price.setTextSize(18); price.setPadding(0,32,0,16); root.addView(price);
+  balance=new TextView(this); balance.setTextSize(20); root.addView(balance); amount=new EditText(this); amount.setSingleLine(true); amount.setHint("مقدار طلا به گرم"); amount.setInputType(8194); root.addView(amount);
+  Button buy=new Button(this); buy.setText("خرید آزمایشی"); root.addView(buy); Button sell=new Button(this); sell.setText("فروش آزمایشی"); root.addView(sell); status=new TextView(this); status.setTextSize(16); status.setPadding(0,20,0,0); root.addView(status); TextView note=new TextView(this); note.setText("نسخه آزمایشی است؛ پرداخت واقعی و درگاه بانکی فعال نیست."); note.setPadding(0,32,0,0); root.addView(note); scroll.addView(root); setContentView(scroll); refresh();
+  buy.setOnClickListener(v->{try{double g=Double.parseDouble(amount.getText().toString()); if(g<=0) throw new Exception(); grams+=g; refresh(); status.setText(String.format(Locale.US,"خرید آزمایشی %.3f گرم؛ مبلغ نمونه %.0f تومان",g,g*samplePrice));}catch(Exception e){status.setText("مقدار گرم را درست وارد کن.");}});
+  sell.setOnClickListener(v->{try{double g=Double.parseDouble(amount.getText().toString()); if(g<=0||g>grams) throw new Exception(); grams-=g; refresh(); status.setText(String.format(Locale.US,"فروش آزمایشی %.3f گرم؛ مبلغ نمونه %.0f تومان",g,g*samplePrice));}catch(Exception e){status.setText("مقدار نامعتبر است یا موجودی کافی نیست.");}});
+ }
+ void refresh(){balance.setText(String.format(Locale.US,"موجودی طلا: %.3f گرم",grams));}
+}
+EOF
+echo 'Project files created.'
